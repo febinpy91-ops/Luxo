@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LUXO · Quotation Manager</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{-webkit-text-size-adjust:100%;height:100%;}
+:root{
+  --gold:#b8975a;--gold2:#d4aa6e;--gold3:#f0d8a8;
+  --ink:#1a1a1a;--ink2:#2e2e2e;
+  --bg:#f7f5f1;--white:#ffffff;
+  --surface:#f0ede8;--surface2:#e8e4dc;
+  --border:#d4cfc6;--border2:#e4e0d8;
+  --muted:#888;--light:#aaa;--faint:#ccc;
+  --red:#cc4444;
+  --sans:'Helvetica Neue',Helvetica,Arial,sans-serif;
+  --serif:Georgia,'Times New Roman',serif;
+}
+body{background:var(--bg);color:var(--ink);font-family:var(--serif);font-size:14px;line-height:1.6;min-height:100%;overflow-x:hidden;}
+
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;}
+.screen.active{display:block;}
+
+/* ══════════ DASHBOARD ══════════ */
+.dash-header{background:var(--ink);padding:28px 20px 20px;position:sticky;top:0;z-index:10;}
+.dash-brand{font-family:var(--sans);font-size:20px;font-weight:300;letter-spacing:0.32em;color:#fff;margin-bottom:2px;}
+.dash-sub{font-family:var(--sans);font-size:8px;letter-spacing:0.18em;color:var(--gold2);margin-bottom:16px;}
+.dash-actions{display:flex;gap:10px;align-items:center;}
+.dash-tools{display:flex;gap:8px;margin-top:12px;}
+.dash-tool{font-family:var(--sans);font-size:9px;letter-spacing:0.12em;background:rgba(255,255,255,0.06);color:var(--gold2);border:1px solid rgba(255,255,255,0.14);padding:6px 12px;cursor:pointer;-webkit-appearance:none;border-radius:0;-webkit-tap-highlight-color:transparent;transition:background 0.2s;}
+.dash-tool:active{background:rgba(255,255,255,0.16);}
+.btn-new{font-family:var(--sans);font-size:10px;letter-spacing:0.14em;background:var(--gold);color:var(--ink);border:none;padding:10px 20px;cursor:pointer;-webkit-appearance:none;border-radius:0;white-space:nowrap;transition:background 0.2s;}
+.btn-new:active{background:var(--gold2);}
+.search-input{flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-family:var(--sans);font-size:13px;padding:9px 14px;outline:none;-webkit-appearance:none;border-radius:0;}
+.search-input::placeholder{color:rgba(255,255,255,0.3);}
+.dash-body{padding:16px;}
+.dash-empty{text-align:center;padding:80px 20px;font-family:var(--sans);color:var(--light);}
+.dash-empty-icon{font-size:36px;margin-bottom:14px;opacity:0.25;}
+.dash-empty-title{font-size:15px;font-weight:300;letter-spacing:0.1em;margin-bottom:8px;}
+.dash-empty-sub{font-size:11px;line-height:1.9;color:var(--faint);}
+
+.q-card{background:var(--white);border:1px solid var(--border2);margin-bottom:8px;display:flex;align-items:stretch;cursor:pointer;transition:border-color 0.15s;-webkit-tap-highlight-color:transparent;}
+.q-card:active{border-color:var(--gold);}
+.q-card-accent{width:4px;background:var(--gold);flex-shrink:0;}
+.q-card-body{flex:1;padding:12px 14px;}
+.q-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px;}
+.q-client{font-size:15px;font-weight:600;color:var(--ink);}
+.q-amount{font-size:13px;font-weight:700;color:var(--gold);font-family:var(--sans);}
+.q-card-meta{display:flex;gap:12px;flex-wrap:wrap;}
+.q-meta{font-family:var(--sans);font-size:9px;color:var(--light);letter-spacing:0.06em;}
+.q-meta span{color:var(--muted);}
+.q-status{display:inline-block;font-family:var(--sans);font-size:8px;letter-spacing:0.12em;padding:2px 7px;margin-top:5px;}
+.s-draft{background:#f0ede8;color:#888;}
+.s-sent{background:#e8f0e8;color:#4a8a4a;}
+.s-accepted{background:#e8eef5;color:#3a6a9a;}
+.q-card-actions{display:flex;flex-direction:column;justify-content:center;padding:8px 8px 8px 0;gap:2px;}
+.q-act{background:none;border:none;cursor:pointer;padding:6px 8px;font-family:var(--sans);font-size:9px;letter-spacing:0.08em;color:var(--light);transition:color 0.15s;-webkit-tap-highlight-color:transparent;}
+.q-act:active{color:var(--gold);}
+.q-act.del:active{color:var(--red);}
+
+/* ══════════ BUILDER HEADER ══════════ */
+.bdr-hdr{background:var(--ink);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+.back-btn{background:none;border:none;color:var(--gold2);cursor:pointer;font-size:22px;line-height:1;padding:0 8px 0 0;-webkit-tap-highlight-color:transparent;}
+.bdr-title{font-family:var(--sans);font-size:10px;letter-spacing:0.16em;color:#fff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.hbtn{font-family:var(--sans);font-size:9px;letter-spacing:0.12em;border:none;padding:8px 14px;cursor:pointer;-webkit-appearance:none;border-radius:0;-webkit-tap-highlight-color:transparent;white-space:nowrap;}
+.hbtn-save{background:var(--gold);color:var(--ink);}
+.hbtn-save:active{background:var(--gold2);}
+.hbtn-pdf{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);}
+.hbtn-pdf:active{background:rgba(255,255,255,0.2);}
+.status-bar{display:flex;align-items:center;gap:10px;padding:9px 16px;background:var(--ink2);border-bottom:1px solid rgba(255,255,255,0.06);}
+.status-lbl{font-family:var(--sans);font-size:8px;letter-spacing:0.12em;color:var(--light);}
+.status-sel{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:#fff;font-family:var(--sans);font-size:10px;padding:4px 10px;outline:none;-webkit-appearance:none;border-radius:0;cursor:pointer;}
+.status-sel option{background:#2e2e2e;color:#fff;}
+
+/* ══════════ BUILDER BODY ══════════ */
+.bdr-body{padding:20px 16px 120px;max-width:780px;margin:0 auto;}
+.s-block{margin-bottom:32px;}
+.s-title{font-family:var(--sans);font-size:8px;letter-spacing:0.2em;color:var(--light);text-transform:uppercase;display:block;padding-bottom:9px;border-bottom:1px solid var(--border2);margin-bottom:16px;}
+.divider{height:1px;background:var(--border2);margin:20px 0;}
+
+.fgroup{margin-bottom:11px;}
+.flabel{font-family:var(--sans);font-size:8px;letter-spacing:0.14em;color:var(--light);text-transform:uppercase;display:block;margin-bottom:4px;}
+.ef{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--ink);font-family:var(--serif);font-size:14px;padding:3px 0 4px;outline:none;display:block;-webkit-appearance:none;border-radius:0;resize:none;transition:border-color 0.2s;line-height:1.5;}
+.ef:focus{border-bottom-color:var(--gold);}
+.ef.bold{font-weight:600;font-size:15px;}
+.ef.sm{font-size:12px;color:var(--muted);}
+.ef.num{text-align:right;}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 16px;}
+.brand-fixed{font-family:var(--sans);font-size:10px;letter-spacing:0.1em;color:var(--light);padding:5px 0;border-bottom:1px solid var(--border2);margin-bottom:12px;}
+
+/* GST bar */
+.gst-bar{background:var(--surface);border:1px solid var(--border2);padding:11px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px;}
+.gst-bar .gl{font-family:var(--sans);font-size:8px;letter-spacing:0.12em;color:var(--muted);}
+.gst-num{width:36px;font-size:17px;font-weight:700;color:var(--gold);background:transparent;border:none;border-bottom:1px solid var(--border);text-align:center;outline:none;font-family:var(--serif);-webkit-appearance:none;border-radius:0;}
+.gst-sym{font-size:13px;color:var(--gold);}
+.gst-info{font-family:var(--sans);font-size:10px;color:var(--muted);}
+
+/* Items */
+.item-card{border:1px solid var(--border2);background:var(--white);margin-bottom:10px;padding:14px;}
+.item-hdr{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px;}
+.item-num-b{font-family:var(--sans);font-size:9px;color:var(--light);min-width:20px;padding-top:5px;}
+.iname{flex:1;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--ink);font-family:var(--serif);font-size:15px;font-weight:600;padding:2px 0 4px;outline:none;-webkit-appearance:none;border-radius:0;width:100%;transition:border-color 0.2s;}
+.iname:focus{border-bottom-color:var(--gold);}
+.xbtn{background:none;border:none;color:var(--faint);font-size:20px;cursor:pointer;line-height:1;padding:2px 2px;flex-shrink:0;-webkit-tap-highlight-color:transparent;}
+.xbtn:active{color:var(--red);}
+.i4{display:grid;grid-template-columns:1fr 64px 120px 1fr;gap:10px;align-items:end;margin-top:8px;}
+.amt-cell{font-size:14px;font-weight:600;color:var(--gold);border-bottom:1px solid var(--border2);padding:3px 0 4px;text-align:right;}
+
+/* Image */
+.img-zone{margin-top:10px;width:100%;min-height:80px;border:1px dashed var(--border);background:var(--surface);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent;}
+.img-zone:active{border-color:var(--gold);}
+.img-zone img{width:100%;max-height:180px;object-fit:cover;display:block;}
+.img-plus{font-size:18px;color:var(--border);margin-bottom:3px;}
+.img-lbl{font-family:var(--sans);font-size:9px;letter-spacing:0.1em;color:var(--light);}
+.img-ctrl{position:absolute;top:5px;right:5px;display:flex;gap:3px;}
+.icbtn{background:rgba(255,255,255,0.9);border:1px solid var(--border);color:var(--muted);width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;}
+input[type=file]{display:none!important;}
+
+/* Totals */
+.totals-wrap{display:flex;justify-content:flex-end;margin-top:20px;}
+.totals-box{width:100%;max-width:320px;}
+.t-row{display:flex;justify-content:space-between;margin-bottom:8px;}
+.t-lbl{font-family:var(--sans);font-size:11px;color:var(--muted);}
+.t-val{font-family:var(--sans);font-size:11px;color:var(--muted);}
+.grand-box{display:flex;justify-content:space-between;align-items:center;background:var(--ink);padding:13px 15px;margin-top:3px;}
+.g-lbl{font-family:var(--sans);font-size:8px;letter-spacing:0.08em;color:var(--gold3);}
+.g-val{font-family:var(--sans);font-size:17px;font-weight:700;color:var(--gold3);}
+.footnote{font-family:var(--sans);font-size:8px;color:var(--faint);margin-top:6px;text-align:right;}
+
+/* Payment */
+.pay-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+.pay-card{border:1px solid var(--border2);background:var(--surface);padding:12px;}
+.pay-pct{font-size:22px;font-weight:700;color:var(--gold);margin-bottom:2px;}
+.pay-title{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:8px;}
+.pay-amt{font-family:var(--sans);font-size:10px;color:var(--muted);margin-top:8px;padding-top:7px;border-top:1px solid var(--border2);}
+
+/* Terms */
+.terms-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.term-card{border:1px solid var(--border2);background:var(--surface);padding:12px;}
+.term-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.term-num{font-family:var(--sans);font-size:8px;color:var(--light);letter-spacing:0.1em;}
+.validity-box{padding:12px 16px;border:1px solid var(--border2);border-left:3px solid var(--gold);background:var(--surface);}
+
+/* Signatures */
+.sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;}
+.sig-lbl{font-family:var(--sans);font-size:8px;letter-spacing:0.14em;color:var(--light);display:block;margin-bottom:10px;}
+.sig-line{height:1px;background:var(--border);margin:26px 0 7px;}
+.sig-date{font-family:var(--sans);font-size:9px;color:var(--faint);}
+
+/* Buttons */
+.btn{font-family:var(--sans);font-size:10px;letter-spacing:0.14em;cursor:pointer;border-radius:0;-webkit-appearance:none;-webkit-tap-highlight-color:transparent;}
+.btn-ghost{background:none;border:1px solid var(--border);color:var(--muted);padding:8px 16px;transition:all 0.2s;}
+.btn-ghost:active{background:var(--gold);color:#fff;border-color:var(--gold);}
+.add-row{margin:10px 0 24px;}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--ink);color:#fff;font-family:var(--sans);font-size:10px;letter-spacing:0.1em;padding:11px 22px;border-left:3px solid var(--gold);transition:transform 0.3s ease;z-index:999;white-space:nowrap;pointer-events:none;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ══════════ PDF PREVIEW SCREEN ══════════ */
+#screen_pdf{background:#e0ddd8;}
+.pdf-toolbar{background:var(--ink);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;}
+.pdf-toolbar-title{font-family:var(--sans);font-size:10px;letter-spacing:0.16em;color:#fff;flex:1;}
+.pdf-close{background:none;border:none;color:var(--gold2);cursor:pointer;font-size:22px;line-height:1;padding:0 8px 0 0;-webkit-tap-highlight-color:transparent;}
+.pdf-instructions{background:var(--gold);padding:12px 16px;font-family:var(--sans);font-size:11px;color:var(--ink);line-height:1.7;letter-spacing:0.02em;}
+.pdf-instructions strong{font-weight:700;}
+.pdf-page-wrap{padding:12px;display:flex;justify-content:center;}
+
+/* THE ACTUAL PDF PAGE */
+.pdf-page{
+  background:#fff;width:100%;max-width:700px;
+  padding:32px 36px 40px;
+  box-shadow:0 4px 32px rgba(0,0,0,0.18);
+  font-family:Georgia,'Times New Roman',serif;
+  font-size:11px;color:#1a1a1a;line-height:1.5;
+}
+.pdf-brand{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:20px;font-weight:300;letter-spacing:0.32em;color:#1a1a1a;margin-bottom:2px;}
+.pdf-brand-sub{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.18em;color:#888;margin-bottom:4px;}
+.pdf-brand-contact{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:8px;color:#aaa;margin-bottom:14px;}
+.pdf-brand-rule{height:1px;background:linear-gradient(90deg,#1a1a1a,#ccc,transparent);margin-bottom:20px;}
+.pdf-q-title{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:18px;font-weight:300;letter-spacing:0.1em;color:#1a1a1a;margin-bottom:4px;}
+.pdf-ref{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:8px;color:#aaa;letter-spacing:0.12em;margin-bottom:16px;}
+.pdf-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 20px;margin-bottom:20px;}
+.pdf-meta-item .ml{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.14em;color:#aaa;text-transform:uppercase;margin-bottom:2px;}
+.pdf-meta-item .mv{font-size:12px;font-weight:600;color:#1a1a1a;}
+.pdf-divider{height:1px;background:#e8e4de;margin:16px 0;}
+.pdf-section-title{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.2em;color:#aaa;text-transform:uppercase;padding-bottom:7px;border-bottom:1px solid #e8e4de;margin-bottom:12px;display:block;}
+
+/* PDF Items table */
+.pdf-items-hdr{display:grid;grid-template-columns:24px 1fr 180px 50px 90px 90px;gap:8px;padding:6px 0;border-bottom:1px solid #1a1a1a;margin-bottom:4px;}
+.pdf-items-hdr div{font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.12em;color:#aaa;text-transform:uppercase;}
+.pdf-item-row{display:grid;grid-template-columns:24px 1fr 180px 50px 90px 90px;gap:8px;padding:8px 0;border-bottom:1px solid #f0ede8;align-items:start;}
+.pdf-item-name{font-size:11px;font-weight:600;color:#1a1a1a;}
+.pdf-item-desc{font-size:9px;color:#888;margin-top:2px;}
+.pdf-item-img{width:100%;height:60px;object-fit:cover;border:1px solid #eee;}
+.pdf-item-img-ph{width:100%;height:60px;background:#f5f3ef;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif;font-size:8px;color:#ccc;letter-spacing:0.1em;}
+.pdf-item-num{font-size:9px;color:#aaa;font-family:'Helvetica Neue',sans-serif;}
+.pdf-item-val{font-size:11px;text-align:right;font-family:'Helvetica Neue',sans-serif;color:#1a1a1a;}
+.pdf-item-amt{font-size:11px;text-align:right;font-weight:600;color:#b8975a;font-family:'Helvetica Neue',sans-serif;}
+.pdf-item-qty{font-size:11px;text-align:center;font-family:'Helvetica Neue',sans-serif;color:#1a1a1a;}
+
+/* PDF Totals */
+.pdf-totals{display:flex;justify-content:flex-end;margin-top:16px;}
+.pdf-totals-box{width:260px;}
+.pdf-t-row{display:flex;justify-content:space-between;margin-bottom:6px;font-family:'Helvetica Neue',sans-serif;font-size:10px;color:#888;}
+.pdf-grand{display:flex;justify-content:space-between;align-items:center;background:#1a1a1a;padding:10px 12px;margin-top:3px;}
+.pdf-grand-lbl{font-family:'Helvetica Neue',sans-serif;font-size:7px;letter-spacing:0.08em;color:#d4aa6e;}
+.pdf-grand-val{font-family:'Helvetica Neue',sans-serif;font-size:14px;font-weight:700;color:#d4aa6e;}
+.pdf-footnote{font-family:'Helvetica Neue',sans-serif;font-size:7px;color:#ccc;margin-top:5px;text-align:right;}
+
+/* PDF Pay */
+.pdf-pay-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:0;}
+.pdf-pay-card{border:1px solid #e8e4de;background:#f5f3ef;padding:10px 10px;}
+.pdf-pay-pct{font-size:18px;font-weight:700;color:#b8975a;margin-bottom:1px;font-family:Georgia,serif;}
+.pdf-pay-title{font-size:10px;font-weight:600;color:#1a1a1a;margin-bottom:4px;}
+.pdf-pay-note{font-size:9px;color:#888;line-height:1.5;}
+.pdf-pay-amt{font-family:'Helvetica Neue',sans-serif;font-size:9px;color:#888;margin-top:7px;padding-top:6px;border-top:1px solid #e8e4de;}
+
+/* PDF Terms */
+.pdf-terms-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.pdf-term-card{border:1px solid #e8e4de;background:#f5f3ef;padding:10px;}
+.pdf-term-num{font-family:'Helvetica Neue',sans-serif;font-size:7px;color:#aaa;letter-spacing:0.1em;margin-bottom:4px;}
+.pdf-term-title{font-size:10px;font-weight:600;color:#1a1a1a;margin-bottom:3px;}
+.pdf-term-body{font-size:9px;color:#888;line-height:1.6;}
+.pdf-validity{padding:10px 14px;border:1px solid #e8e4de;border-left:3px solid #b8975a;background:#f5f3ef;font-size:9px;color:#888;line-height:1.7;}
+
+/* PDF Sigs */
+.pdf-sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:12px;}
+.pdf-sig-lbl{font-family:'Helvetica Neue',sans-serif;font-size:7px;letter-spacing:0.14em;color:#aaa;display:block;margin-bottom:10px;}
+.pdf-sig-name{font-size:11px;font-weight:600;color:#1a1a1a;margin-bottom:2px;}
+.pdf-sig-line{height:1px;background:#ccc;margin:22px 0 6px;}
+.pdf-sig-date{font-family:'Helvetica Neue',sans-serif;font-size:8px;color:#ccc;}
+.pdf-footer{margin-top:24px;padding-top:12px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;font-family:'Helvetica Neue',sans-serif;font-size:7px;color:#ccc;letter-spacing:0.06em;}
+
+/* Mobile */
+@media(max-width:600px){
+  .g3{grid-template-columns:1fr 1fr;}
+  .i4{grid-template-columns:1fr 1fr;}
+  .terms-grid{grid-template-columns:1fr;}
+  .sig-grid{grid-template-columns:1fr;gap:20px;}
+  .pay-grid{grid-template-columns:1fr;gap:8px;}
+  .totals-box{max-width:100%;}
+  .pdf-items-hdr,.pdf-item-row{grid-template-columns:20px 1fr 0 40px 80px 80px;}
+  .pdf-items-hdr div:nth-child(3),.pdf-item-row>div:nth-child(3){display:none;}
+  .pdf-meta-grid{grid-template-columns:1fr 1fr;}
+  .pdf-pay-grid{grid-template-columns:1fr;}
+  .pdf-terms-grid{grid-template-columns:1fr;}
+  .pdf-sig-grid{grid-template-columns:1fr;}
+  .pdf-page{padding:20px 16px 28px;}
+}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- ════ DASHBOARD ════ -->
+<div class="screen active" id="screen_dash">
+  <div class="dash-header">
+    <div class="dash-brand">L U X O</div>
+    <div class="dash-sub">QUOTATION MANAGER</div>
+    <div class="dash-actions">
+      <input class="search-input" type="text" placeholder="Search client, ref…" oninput="filterQ(this.value)">
+      <button class="btn-new" onclick="newQ()">+ New</button>
+    </div>
+    <div class="dash-tools">
+      <button class="dash-tool" onclick="exportData()">&#8595; Backup</button>
+      <button class="dash-tool" onclick="document.getElementById('import_file').click()">&#8593; Restore</button>
+      <input type="file" id="import_file" accept="application/json,.json" onchange="importData(event)">
+    </div>
+  </div>
+  <div class="dash-body" id="dash_body"></div>
+</div>
+
+<!-- ════ BUILDER ════ -->
+<div class="screen" id="screen_builder">
+  <div class="bdr-hdr">
+    <button class="back-btn" onclick="goBack()">‹</button>
+    <span class="bdr-title" id="bdr_title">NEW QUOTATION</span>
+    <button class="hbtn hbtn-pdf" onclick="openPDF()">Preview PDF</button>
+    <button class="hbtn hbtn-save" onclick="saveQ()">Save</button>
+  </div>
+  <div class="status-bar">
+    <span class="status-lbl">STATUS</span>
+    <select class="status-sel" id="q_status">
+      <option value="draft">Draft</option>
+      <option value="sent">Sent</option>
+      <option value="accepted">Accepted</option>
+    </select>
+  </div>
+  <div class="bdr-body">
+    <div class="s-block">
+      <span class="s-title">Company Details</span>
+      <div class="brand-fixed">LUXO FURNISHING &amp; INFRASTRUCTURE SOLUTIONS PVT. LTD.</div>
+      <div class="g3">
+        <div class="fgroup"><span class="flabel">Address</span><textarea class="ef sm" rows="2" id="co_addr">South Chittoor, Near Aster Medcity, Ernakulam – 682 027, Kerala</textarea></div>
+        <div class="fgroup"><span class="flabel">Phone</span><input class="ef sm" type="text" id="co_phone" value="+91 75109 57518  ·  +91 90202 62662"></div>
+        <div class="fgroup"><span class="flabel">Email</span><input class="ef sm" type="text" id="co_email" value="info@formave.in  ·  sales@formave.in"></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="s-block">
+      <span class="s-title">Quotation Details</span>
+      <div class="g3">
+        <div class="fgroup"><span class="flabel">Ref No.</span><input class="ef bold" type="text" id="q_ref" value=""></div>
+        <div class="fgroup"><span class="flabel">Date</span><input class="ef bold" type="text" id="q_date" value=""></div>
+        <div class="fgroup"><span class="flabel">Valid Until</span><input class="ef bold" type="text" id="q_valid" value=""></div>
+        <div class="fgroup"><span class="flabel">Prepared For</span><input class="ef bold" type="text" id="q_client" value=""></div>
+        <div class="fgroup"><span class="flabel">Location</span><input class="ef bold" type="text" id="q_location" value=""></div>
+        <div class="fgroup"><span class="flabel">Material</span><input class="ef bold" type="text" id="q_material" value=""></div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="gst-bar">
+      <span class="gl">GST PER SLAB (CGST = SGST)</span>
+      <div style="display:flex;align-items:center;gap:5px;">
+        <input class="gst-num" type="number" id="gst_rate" value="9" min="0" max="50" oninput="recalc()">
+        <span class="gst-sym">%</span>
+      </div>
+      <span class="gst-info" id="gst_info">Total GST: 18%</span>
+    </div>
+    <div class="s-block">
+      <span class="s-title">Line Items &amp; Images</span>
+      <div id="items_list"></div>
+      <div class="add-row"><button class="btn btn-ghost" onclick="addItem()">+ Add Line Item</button></div>
+      <div class="totals-wrap">
+        <div class="totals-box">
+          <div class="divider" style="margin-top:0;"></div>
+          <div class="t-row"><span class="t-lbl">Subtotal (before tax)</span><span class="t-val" id="t_sub">Rs. 0</span></div>
+          <div class="t-row"><span class="t-lbl" id="t_cl">CGST @ 9%</span><span class="t-val" id="t_c">Rs. 0</span></div>
+          <div class="t-row"><span class="t-lbl" id="t_sl">SGST @ 9%</span><span class="t-val" id="t_s">Rs. 0</span></div>
+          <div class="divider" style="margin:10px 0;"></div>
+          <div class="grand-box">
+            <span class="g-lbl" id="t_gl">GRAND TOTAL (INCL. 18% GST)</span>
+            <span class="g-val" id="t_g">Rs. 0</span>
+          </div>
+          <div class="footnote">* All amounts in INR. Estimates may vary.</div>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="s-block">
+      <span class="s-title">Payment Schedule</span>
+      <div class="pay-grid" id="pay_grid"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="s-block">
+      <span class="s-title">Terms &amp; Conditions</span>
+      <div class="terms-grid" id="terms_list"></div>
+      <div class="add-row"><button class="btn btn-ghost" onclick="addTerm()">+ Add Clause</button></div>
+      <div class="fgroup">
+        <span class="flabel">Validity Notice</span>
+        <div class="validity-box">
+          <textarea class="ef sm" id="validity_text" rows="3" style="line-height:1.7;">This quotation is valid until the date stated above. All pricing and material availability are subject to change after this date. Please confirm your order at the earliest to secure the quoted price.</textarea>
+        </div>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="s-block">
+      <span class="s-title">Acceptance &amp; Authorisation</span>
+      <div class="sig-grid">
+        <div>
+          <span class="sig-lbl">Client Acceptance Signature</span>
+          <input class="ef bold" type="text" id="sig_client" placeholder="Client name">
+          <div class="sig-line"></div><div class="sig-date">Date _______________</div>
+        </div>
+        <div>
+          <span class="sig-lbl">Authorised Signatory — LUXO</span>
+          <input class="ef bold" type="text" id="sig_luxo" value="Luxo Furnishing &amp; Infrastructure Solutions">
+          <div class="sig-line"></div><div class="sig-date">Date _______________</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PDF PREVIEW ════ -->
+<div class="screen" id="screen_pdf">
+  <div class="pdf-toolbar">
+    <button class="pdf-close" onclick="closePDF()">‹</button>
+    <span class="pdf-toolbar-title">PDF PREVIEW</span>
+    <button class="hbtn hbtn-save" onclick="sharePDF()" id="share_btn">Share / Save PDF</button>
+  </div>
+  <div class="pdf-instructions" id="pdf_instructions">
+    <strong>To save as PDF on iPhone/iPad:</strong> Tap "Share / Save PDF" below → then tap the Share icon (box with arrow) → Print → pinch outward on the preview → tap Share again → Save to Files
+  </div>
+  <div class="pdf-page-wrap">
+    <div class="pdf-page" id="pdf_page"></div>
+  </div>
+  <div style="height:40px;"></div>
+</div>
+
+<script>
+/* ════ STORAGE ════ */
+var DB='luxo_v2';
+var quotations=[];
+var curId=null,curItems=[],curTerms=[],curPayNotes=[],nid=1,ntid=1;
+
+function loadDB(){try{var r=localStorage.getItem(DB);quotations=r?JSON.parse(r):[];}catch(e){quotations=[];}}
+function saveDB(){try{localStorage.setItem(DB,JSON.stringify(quotations));}catch(e){showToast('Storage full — export a backup & remove old quotations');}}
+
+/* ════ BACKUP / RESTORE ════ */
+function exportData(){
+  try{
+    var payload={app:'luxo',version:2,exportedAt:Date.now(),count:quotations.length,quotations:quotations};
+    var blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;a.download='luxo-backup-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(url);},200);
+    showToast('Backup downloaded ✓');
+  }catch(e){showToast('Export failed');}
+}
+function importData(e){
+  var f=e.target.files[0];if(!f){return;}
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var parsed=JSON.parse(ev.target.result);
+      var incoming=Array.isArray(parsed)?parsed:(parsed.quotations||[]);
+      if(!Array.isArray(incoming)||!incoming.length)throw new Error('empty');
+      if(!confirm('Restore '+incoming.length+' quotation(s)?\nMatching IDs are updated; new ones are added. Nothing is deleted.'))return;
+      var added=0,updated=0;
+      incoming.forEach(function(q){
+        if(!q||!q.id)return;
+        var idx=quotations.findIndex(function(x){return x.id===q.id;});
+        if(idx>=0){quotations[idx]=q;updated++;}else{quotations.push(q);added++;}
+      });
+      saveDB();renderDash();showToast('Restored ✓  '+added+' added, '+updated+' updated');
+    }catch(err){showToast('Invalid backup file');}
+    e.target.value='';
+  };
+  reader.readAsText(f);
+}
+function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function genRef(){var n=quotations.length+1,d=new Date();return d.getFullYear().toString().slice(2)+p2(d.getMonth()+1)+p2(d.getDate())+p2(n);}
+function p2(n){return n<10?'0'+n:''+n;}
+function todayStr(){var d=new Date(),M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear();}
+function validStr(){var d=new Date();d.setDate(d.getDate()+30);var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear();}
+function fmt(n){return 'Rs. '+Math.round(n).toLocaleString('en-IN');}
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function gv(id){var e=document.getElementById(id);return e?e.value:'';}
+function sv(id,v){var e=document.getElementById(id);if(e)e.value=v;}
+function st(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
+function showScreen(n){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('screen_'+n).classList.add('active');window.scrollTo(0,0);}
+function showToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2200);}
+function findById(arr,id){for(var i=0;i<arr.length;i++)if(arr[i].id===id)return arr[i];}
+function setF(arr,id,f,v){var o=findById(arr,id);if(o)o[f]=v;}
+function setFN(arr,id,f,v){var o=findById(arr,id);if(o)o[f]=parseFloat(v)||0;}
+
+/* ════ DASHBOARD ════ */
+function renderDash(filter){
+  var body=document.getElementById('dash_body');
+  var list=filter?quotations.filter(function(q){var f=filter.toLowerCase();return(q.client||'').toLowerCase().includes(f)||(q.ref||'').toLowerCase().includes(f)||(q.location||'').toLowerCase().includes(f);}):quotations.slice().reverse();
+  if(!list.length){
+    body.innerHTML='<div class="dash-empty"><div class="dash-empty-icon">◻</div><div class="dash-empty-title">'+(filter?'No results':'No quotations yet')+'</div><div class="dash-empty-sub">'+(filter?'Try a different search':'Tap + New to create your first quotation')+'</div></div>';
+    return;
+  }
+  body.innerHTML='';
+  list.forEach(function(q){
+    var c=document.createElement('div');c.className='q-card';
+    var sc='s-'+(q.status||'draft'),sl=(q.status||'draft');sl=sl.charAt(0).toUpperCase()+sl.slice(1);
+    c.innerHTML='<div class="q-card-accent"></div>'
+      +'<div class="q-card-body" onclick="openQ(\''+q.id+'\')">'
+      +'<div class="q-card-top"><div class="q-client">'+esc(q.client||'Untitled')+'</div><div class="q-amount">'+fmt(q.grand||0)+'</div></div>'
+      +'<div class="q-card-meta">'
+      +'<div class="q-meta">REF <span>'+esc(q.ref||'—')+'</span></div>'
+      +'<div class="q-meta">'+esc(q.date||'—')+'</div>'
+      +'<div class="q-meta">'+esc(q.location||'—')+'</div>'
+      +'<div class="q-meta"><span>'+(q.items?q.items.length:0)+' items</span></div>'
+      +'</div><div class="q-status '+sc+'">'+sl+'</div></div>'
+      +'<div class="q-card-actions">'
+      +'<button class="q-act" onclick="event.stopPropagation();dupQ(\''+q.id+'\')">Copy</button>'
+      +'<button class="q-act del" onclick="event.stopPropagation();delQ(\''+q.id+'\')">Del</button>'
+      +'</div>';
+    body.appendChild(c);
+  });
+}
+function filterQ(v){renderDash(v);}
+
+/* ════ NEW / OPEN ════ */
+function newQ(){
+  curId=null;
+  curItems=[{id:nid++,name:'',desc:'',qty:1,price:0,img:null}];
+  curTerms=[
+    {id:ntid++,title:'Additional Fixtures',body:'Fixtures and fittings not listed in this quotation are excluded.'},
+    {id:ntid++,title:'Transportation',body:'Transport charges billed at actuals, invoiced separately.'},
+    {id:ntid++,title:'Estimates Only',body:'All figures are estimates and may vary per final approved drawings.'},
+    {id:ntid++,title:'As Per Drawings',body:'Work executed strictly per approved designs without any deviation.'}
+  ];
+  curPayNotes=['Due before work commences. Covers material procurement & setup.','Due during active production at the agreed milestone.','Due upon completion of work, prior to delivery or handover.'];
+  loadBuilder(null);showScreen('builder');
+}
+function openQ(id){
+  var q=quotations.find(function(x){return x.id===id;});if(!q)return;
+  curId=id;
+  curItems=q.items?JSON.parse(JSON.stringify(q.items)):[];
+  curTerms=q.terms?JSON.parse(JSON.stringify(q.terms)):[];
+  curPayNotes=q.payNotes?q.payNotes.slice():['','',''];
+  loadBuilder(q);showScreen('builder');
+}
+function loadBuilder(q){
+  sv('co_addr',q?q.coAddr||'':'South Chittoor, Near Aster Medcity, Ernakulam – 682 027, Kerala');
+  sv('co_phone',q?q.coPhone||'':'+91 75109 57518  ·  +91 90202 62662');
+  sv('co_email',q?q.coEmail||'':'info@formave.in  ·  sales@formave.in');
+  sv('q_ref',q?q.ref||'':genRef());
+  sv('q_date',q?q.date||'':todayStr());
+  sv('q_valid',q?q.valid||'':validStr());
+  sv('q_client',q?q.client||'':'');
+  sv('q_location',q?q.location||'':'');
+  sv('q_material',q?q.material||'':'');
+  sv('gst_rate',q?q.gstRate||9:9);
+  sv('q_status',q?q.status||'draft':'draft');
+  sv('validity_text',q?q.validityText||'':'This quotation is valid until the date stated above. All pricing and material availability are subject to change after this date. Please confirm your order at the earliest to secure the quoted price.');
+  sv('sig_client',q?q.sigClient||'':'');
+  sv('sig_luxo',q?q.sigLuxo||'':'Luxo Furnishing & Infrastructure Solutions');
+  st('bdr_title',q?('REF '+q.ref+' · '+(q.client||'UNTITLED')).toUpperCase():'NEW QUOTATION');
+  renderItems();renderTerms();renderPayment();recalc();window.scrollTo(0,0);
+}
+
+/* ════ SAVE ════ */
+function saveQ(silent){
+  var r=parseFloat(gv('gst_rate'))||0,sub=0;
+  curItems.forEach(function(i){sub+=(i.qty||0)*(i.price||0);});
+  var grand=sub*(1+r*2/100);
+  var q={
+    id:curId||genId(),
+    coAddr:gv('co_addr'),coPhone:gv('co_phone'),coEmail:gv('co_email'),
+    ref:gv('q_ref'),date:gv('q_date'),valid:gv('q_valid'),
+    client:gv('q_client'),location:gv('q_location'),material:gv('q_material'),
+    gstRate:r,status:gv('q_status'),
+    validityText:gv('validity_text'),
+    sigClient:gv('sig_client'),sigLuxo:gv('sig_luxo'),
+    items:JSON.parse(JSON.stringify(curItems)),
+    terms:JSON.parse(JSON.stringify(curTerms)),
+    payNotes:curPayNotes.slice(),
+    grand:grand,updatedAt:Date.now()
+  };
+  if(curId){var i=quotations.findIndex(function(x){return x.id===curId;});if(i>=0)quotations[i]=q;else quotations.push(q);}
+  else{quotations.push(q);curId=q.id;}
+  saveDB();
+  st('bdr_title',('REF '+q.ref+' · '+(q.client||'UNTITLED')).toUpperCase());
+  if(!silent)showToast('Saved ✓');
+}
+function dupQ(id){
+  var q=quotations.find(function(x){return x.id===id;});if(!q)return;
+  var c=JSON.parse(JSON.stringify(q));c.id=genId();c.ref=genRef();c.status='draft';c.client=(q.client||'')+(q.client?' (copy)':'Copy');
+  quotations.push(c);saveDB();renderDash();showToast('Duplicated');
+}
+function delQ(id){
+  if(!confirm('Delete this quotation?'))return;
+  quotations=quotations.filter(function(x){return x.id!==id;});
+  saveDB();renderDash();showToast('Deleted');
+}
+function goBack(){
+  if(document.getElementById('screen_builder').classList.contains('active') && (curId||builderHasContent())){saveQ(true);}
+  showScreen('dash');renderDash();
+}
+
+/* ════ AUTOSAVE ════ */
+var _autosaveTimer=null;
+function builderHasContent(){
+  if((gv('q_client')||'').trim())return true;
+  for(var i=0;i<curItems.length;i++){var it=curItems[i];if((it.name||'').trim()||(it.desc||'').trim()||it.price>0||it.img)return true;}
+  return false;
+}
+function autosave(){
+  if(!document.getElementById('screen_builder').classList.contains('active'))return;
+  if(!curId && !builderHasContent())return; /* don't create empty drafts */
+  clearTimeout(_autosaveTimer);
+  _autosaveTimer=setTimeout(function(){saveQ(true);},700);
+}
+
+/* ════ RECALC ════ */
+function recalc(){
+  var r=parseFloat(gv('gst_rate'))||0,sub=0;
+  curItems.forEach(function(i){sub+=(i.qty||0)*(i.price||0);});
+  var cgst=sub*r/100,sgst=sub*r/100,grand=sub+cgst+sgst;
+  st('t_sub',fmt(sub));st('t_cl','CGST @ '+r+'%');st('t_sl','SGST @ '+r+'%');
+  st('t_c',fmt(cgst));st('t_s',fmt(sgst));
+  st('t_gl','GRAND TOTAL (INCL. '+(r*2)+'% GST)');st('t_g',fmt(grand));
+  st('gst_info','Total GST: '+(r*2)+'%  ·  Grand Total: '+fmt(grand));
+  curItems.forEach(function(item){var e=document.getElementById('amt_'+item.id);if(e)e.textContent=fmt((item.qty||0)*(item.price||0));});
+  [0.5,0.25,0.25].forEach(function(rt,k){var e=document.getElementById('pa_'+k);if(e)e.textContent=fmt(grand*rt);});
+}
+
+/* ════ ITEMS ════ */
+function renderItems(){
+  var list=document.getElementById('items_list');list.innerHTML='';
+  curItems.forEach(function(item,idx){
+    var div=document.createElement('div');div.className='item-card';
+    var imgH=item.img
+      ?'<img src="'+item.img+'" alt="product"><div class="img-ctrl"><button class="icbtn" onclick="event.stopPropagation();document.getElementById(\'fi_'+item.id+'\').click()">↑</button><button class="icbtn" onclick="event.stopPropagation();rmImg('+item.id+')">×</button></div>'
+      :'<div class="img-plus">+</div><div class="img-lbl">Tap to add image</div>';
+    div.innerHTML='<div class="item-hdr"><span class="item-num-b">'+String(idx+1).padStart(2,'0')+'</span>'
+      +'<input class="iname" type="text" placeholder="Item name" value="'+esc(item.name)+'" oninput="setF(curItems,'+item.id+',\'name\',this.value)">'
+      +'<button class="xbtn" onclick="rmItem('+item.id+')">×</button></div>'
+      +'<div class="fgroup"><span class="flabel">Description</span>'
+      +'<textarea class="ef sm" rows="2" oninput="setF(curItems,'+item.id+',\'desc\',this.value)">'+esc(item.desc)+'</textarea></div>'
+      +'<div class="i4">'
+      +'<div></div>'
+      +'<div class="fgroup"><span class="flabel">Qty</span><input class="ef bold" type="number" min="1" value="'+item.qty+'" style="text-align:center;" oninput="setFN(curItems,'+item.id+',\'qty\',this.value);recalc();"></div>'
+      +'<div class="fgroup"><span class="flabel">Unit Price (Rs.)</span><input class="ef bold num" type="number" min="0" value="'+item.price+'" oninput="setFN(curItems,'+item.id+',\'price\',this.value);recalc();"></div>'
+      +'<div><span class="flabel">Amount</span><div class="amt-cell" id="amt_'+item.id+'">'+fmt(item.qty*item.price)+'</div></div>'
+      +'</div>'
+      +'<div class="fgroup"><span class="flabel">Product Image</span>'
+      +'<div class="img-zone" onclick="document.getElementById(\'fi_'+item.id+'\').click()">'+imgH+'</div>'
+      +'<input type="file" id="fi_'+item.id+'" accept="image/*" onchange="handleImg(event,'+item.id+')"></div>';
+    list.appendChild(div);
+  });
+  recalc();
+}
+function addItem(){curItems.push({id:nid++,name:'',desc:'',qty:1,price:0,img:null});renderItems();autosave();}
+function rmItem(id){if(curItems.length<=1)return;curItems=curItems.filter(function(i){return i.id!==id;});renderItems();autosave();}
+function handleImg(e,id){
+  var f=e.target.files[0];if(!f)return;
+  showToast('Processing image…');
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var img=new Image();
+    img.onload=function(){
+      var max=1000,w=img.width,h=img.height;
+      if(w>=h){if(w>max){h=Math.round(h*max/w);w=max;}}
+      else{if(h>max){w=Math.round(w*max/h);h=max;}}
+      var c=document.createElement('canvas');c.width=w;c.height=h;
+      var ctx=c.getContext('2d');
+      ctx.fillStyle='#ffffff';ctx.fillRect(0,0,w,h);
+      ctx.drawImage(img,0,0,w,h);
+      var out;
+      try{out=c.toDataURL('image/jpeg',0.72);}catch(err){out=ev.target.result;}
+      var o=findById(curItems,id);if(o)o.img=out;
+      renderItems();autosave();
+    };
+    img.onerror=function(){var o=findById(curItems,id);if(o)o.img=ev.target.result;renderItems();autosave();};
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(f);
+}
+function rmImg(id){var o=findById(curItems,id);if(o)o.img=null;renderItems();autosave();}
+
+/* ════ TERMS ════ */
+function renderTerms(){
+  var list=document.getElementById('terms_list');list.innerHTML='';
+  curTerms.forEach(function(term,idx){
+    var div=document.createElement('div');div.className='term-card';
+    div.innerHTML='<div class="term-hdr"><span class="term-num">'+String(idx+1).padStart(2,'0')+'</span><button class="xbtn" style="font-size:16px;" onclick="rmTerm('+term.id+')">×</button></div>'
+      +'<input type="text" value="'+esc(term.title)+'" placeholder="Clause title" style="width:100%;font-size:13px;font-weight:600;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--ink);padding:3px 0 4px;outline:none;font-family:var(--serif);margin-bottom:7px;display:block;-webkit-appearance:none;border-radius:0;" oninput="setF(curTerms,'+term.id+',\'title\',this.value)">'
+      +'<textarea rows="3" style="width:100%;font-size:11px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--muted);padding:3px 0;outline:none;resize:none;line-height:1.7;font-family:var(--serif);-webkit-appearance:none;" oninput="setF(curTerms,'+term.id+',\'body\',this.value)">'+esc(term.body)+'</textarea>';
+    list.appendChild(div);
+  });
+}
+function addTerm(){curTerms.push({id:ntid++,title:'',body:''});renderTerms();autosave();}
+function rmTerm(id){if(curTerms.length<=1)return;curTerms=curTerms.filter(function(t){return t.id!==id;});renderTerms();autosave();}
+
+/* ════ PAYMENT ════ */
+function renderPayment(){
+  var r=parseFloat(gv('gst_rate'))||0,sub=0;
+  curItems.forEach(function(i){sub+=(i.qty||0)*(i.price||0);});
+  var grand=sub*(1+r*2/100);
+  var labels=['Advance','Progress','Final'],pcts=['50%','25%','25%'],ratios=[0.5,0.25,0.25];
+  var grid=document.getElementById('pay_grid');grid.innerHTML='';
+  for(var j=0;j<3;j++){
+    (function(j){
+      var div=document.createElement('div');div.className='pay-card';
+      div.innerHTML='<div class="pay-pct">'+pcts[j]+'</div><div class="pay-title">'+labels[j]+'</div>'
+        +'<div class="fgroup"><span class="flabel">Note</span>'
+        +'<textarea rows="2" style="width:100%;font-size:11px;background:transparent;border:none;border-bottom:1px solid var(--border2);color:var(--muted);padding:3px 0;outline:none;resize:none;line-height:1.6;font-family:var(--serif);-webkit-appearance:none;" oninput="curPayNotes['+j+']=this.value;">'+esc(curPayNotes[j]||'')+'</textarea></div>'
+        +'<div class="pay-amt" id="pa_'+j+'">'+fmt(grand*ratios[j])+'</div>';
+      grid.appendChild(div);
+    })(j);
+  }
+}
+
+/* ════ PDF GENERATION ════ */
+function openPDF(){
+  saveQ();
+  buildPDFPage();
+  showScreen('pdf');
+}
+function closePDF(){showScreen('builder');}
+
+function buildPDFPage(){
+  var r=parseFloat(gv('gst_rate'))||0,sub=0;
+  curItems.forEach(function(i){sub+=(i.qty||0)*(i.price||0);});
+  var cgst=sub*r/100,sgst=sub*r/100,grand=sub+cgst+sgst;
+  var ratios=[0.5,0.25,0.25],labels=['Advance','Progress','Final'],pcts=['50%','25%','25%'];
+
+  // Items rows
+  var itemRows='';
+  curItems.forEach(function(item,idx){
+    var imgCell=item.img
+      ?'<img class="pdf-item-img" src="'+item.img+'" alt="">'
+      :'<div class="pdf-item-img-ph">NO IMAGE</div>';
+    itemRows+='<div class="pdf-item-row">'
+      +'<div class="pdf-item-num">'+String(idx+1).padStart(2,'0')+'</div>'
+      +'<div><div class="pdf-item-name">'+esc(item.name||'—')+'</div><div class="pdf-item-desc">'+esc(item.desc||'')+'</div></div>'
+      +'<div>'+imgCell+'</div>'
+      +'<div class="pdf-item-qty">'+item.qty+'</div>'
+      +'<div class="pdf-item-val">'+fmt(item.price)+'</div>'
+      +'<div class="pdf-item-amt">'+fmt((item.qty||0)*(item.price||0))+'</div>'
+      +'</div>';
+  });
+
+  // Pay cards
+  var payCards='';
+  for(var j=0;j<3;j++){
+    payCards+='<div class="pdf-pay-card">'
+      +'<div class="pdf-pay-pct">'+pcts[j]+'</div>'
+      +'<div class="pdf-pay-title">'+labels[j]+'</div>'
+      +'<div class="pdf-pay-note">'+esc(curPayNotes[j]||'')+'</div>'
+      +'<div class="pdf-pay-amt">'+fmt(grand*ratios[j])+'</div>'
+      +'</div>';
+  }
+
+  // Terms
+  var termCards='';
+  curTerms.forEach(function(t,idx){
+    termCards+='<div class="pdf-term-card">'
+      +'<div class="pdf-term-num">'+String(idx+1).padStart(2,'0')+'</div>'
+      +'<div class="pdf-term-title">'+esc(t.title||'')+'</div>'
+      +'<div class="pdf-term-body">'+esc(t.body||'')+'</div>'
+      +'</div>';
+  });
+
+  var html=
+    '<div class="pdf-brand">L U X O</div>'
+    +'<div class="pdf-brand-sub">FURNISHING &amp; INFRASTRUCTURE SOLUTIONS PVT. LTD.</div>'
+    +'<div class="pdf-brand-contact">'+esc(gv('co_addr').replace(/\n/g,' '))+'  ·  '+esc(gv('co_phone'))+'  ·  '+esc(gv('co_email'))+'</div>'
+    +'<div class="pdf-brand-rule"></div>'
+
+    +'<div class="pdf-q-title">QUOTATION</div>'
+    +'<div class="pdf-ref">REF NO. '+esc(gv('q_ref'))+'</div>'
+    +'<div class="pdf-meta-grid">'
+    +'<div class="pdf-meta-item"><div class="ml">Date</div><div class="mv">'+esc(gv('q_date'))+'</div></div>'
+    +'<div class="pdf-meta-item"><div class="ml">Valid Until</div><div class="mv">'+esc(gv('q_valid'))+'</div></div>'
+    +'<div class="pdf-meta-item"><div class="ml">Prepared For</div><div class="mv">'+esc(gv('q_client'))+'</div></div>'
+    +'<div class="pdf-meta-item"><div class="ml">Location</div><div class="mv">'+esc(gv('q_location'))+'</div></div>'
+    +'<div class="pdf-meta-item"><div class="ml">Material</div><div class="mv">'+esc(gv('q_material'))+'</div></div>'
+    +'<div class="pdf-meta-item"><div class="ml">Status</div><div class="mv">'+esc(gv('q_status').charAt(0).toUpperCase()+gv('q_status').slice(1))+'</div></div>'
+    +'</div>'
+
+    +'<span class="pdf-section-title">Line Items</span>'
+    +'<div class="pdf-items-hdr"><div>#</div><div>Item</div><div>Image</div><div>Qty</div><div style="text-align:right">Unit Price</div><div style="text-align:right">Amount</div></div>'
+    +itemRows
+    +'<div class="pdf-totals"><div class="pdf-totals-box">'
+    +'<div class="pdf-t-row"><span>Subtotal (before tax)</span><span>'+fmt(sub)+'</span></div>'
+    +'<div class="pdf-t-row"><span>CGST @ '+r+'%</span><span>'+fmt(cgst)+'</span></div>'
+    +'<div class="pdf-t-row"><span>SGST @ '+r+'%</span><span>'+fmt(sgst)+'</span></div>'
+    +'<div class="pdf-grand"><span class="pdf-grand-lbl">GRAND TOTAL (INCL. '+(r*2)+'% GST)</span><span class="pdf-grand-val">'+fmt(grand)+'</span></div>'
+    +'<div class="pdf-footnote">* All amounts in INR. Estimates may vary per final approved drawings.</div>'
+    +'</div></div>'
+
+    +'<div class="pdf-divider"></div>'
+    +'<span class="pdf-section-title">Payment Schedule</span>'
+    +'<div class="pdf-pay-grid">'+payCards+'</div>'
+
+    +'<div class="pdf-divider"></div>'
+    +'<span class="pdf-section-title">Terms &amp; Conditions</span>'
+    +'<div class="pdf-terms-grid">'+termCards+'</div>'
+    +'<div class="pdf-validity">'+esc(gv('validity_text'))+'</div>'
+
+    +'<div class="pdf-divider"></div>'
+    +'<span class="pdf-section-title">Acceptance &amp; Authorisation</span>'
+    +'<div class="pdf-sig-grid">'
+    +'<div><span class="pdf-sig-lbl">CLIENT ACCEPTANCE SIGNATURE</span><div class="pdf-sig-name">'+esc(gv('sig_client'))+'</div><div class="pdf-sig-line"></div><div class="pdf-sig-date">Date _______________</div></div>'
+    +'<div><span class="pdf-sig-lbl">AUTHORISED SIGNATORY — LUXO</span><div class="pdf-sig-name">'+esc(gv('sig_luxo'))+'</div><div class="pdf-sig-line"></div><div class="pdf-sig-date">Date _______________</div></div>'
+    +'</div>'
+
+    +'<div class="pdf-footer">'
+    +'<span>LUXO · Ref '+esc(gv('q_ref'))+'</span>'
+    +'<span>Confidential</span>'
+    +'<span>'+esc(gv('co_email').split('·')[0].trim())+'</span>'
+    +'</div>';
+
+  document.getElementById('pdf_page').innerHTML=html;
+}
+
+function sharePDF(){
+  // On iPhone Safari: use Share Sheet which allows PDF saving natively
+  if(navigator.share){
+    // Build a blob URL of just the PDF page for sharing
+    var pageHTML=document.getElementById('pdf_page').innerHTML;
+    var full='<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>LUXO Quotation</title>'
+      +'<style>'
+      +'*{box-sizing:border-box;margin:0;padding:0;}'
+      +'body{font-family:Georgia,serif;font-size:11px;color:#1a1a1a;line-height:1.5;padding:20px;background:#fff;}'
+      +'.pdf-brand{font-family:Helvetica,Arial,sans-serif;font-size:20px;font-weight:300;letter-spacing:0.32em;color:#1a1a1a;margin-bottom:2px;}'
+      +'.pdf-brand-sub{font-family:Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.18em;color:#888;margin-bottom:4px;}'
+      +'.pdf-brand-contact{font-family:Helvetica,Arial,sans-serif;font-size:8px;color:#aaa;margin-bottom:12px;}'
+      +'.pdf-brand-rule{height:1px;background:#1a1a1a;margin-bottom:18px;}'
+      +'.pdf-q-title{font-family:Helvetica,Arial,sans-serif;font-size:18px;font-weight:300;letter-spacing:0.1em;margin-bottom:3px;}'
+      +'.pdf-ref{font-family:Helvetica,Arial,sans-serif;font-size:8px;color:#aaa;letter-spacing:0.12em;margin-bottom:14px;}'
+      +'.pdf-meta-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px 18px;margin-bottom:18px;}'
+      +'.pdf-meta-item .ml{font-family:Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.14em;color:#aaa;margin-bottom:2px;}'
+      +'.pdf-meta-item .mv{font-size:12px;font-weight:600;}'
+      +'.pdf-divider{height:1px;background:#e8e4de;margin:14px 0;}'
+      +'.pdf-section-title{font-family:Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.2em;color:#aaa;text-transform:uppercase;display:block;padding-bottom:7px;border-bottom:1px solid #e8e4de;margin-bottom:10px;}'
+      +'.pdf-items-hdr{display:grid;grid-template-columns:20px 1fr 100px 40px 80px 80px;gap:6px;padding:5px 0;border-bottom:1px solid #1a1a1a;margin-bottom:3px;}'
+      +'.pdf-items-hdr div{font-family:Helvetica,Arial,sans-serif;font-size:7px;letter-spacing:0.1em;color:#aaa;}'
+      +'.pdf-item-row{display:grid;grid-template-columns:20px 1fr 100px 40px 80px 80px;gap:6px;padding:7px 0;border-bottom:1px solid #f0ede8;align-items:start;}'
+      +'.pdf-item-name{font-size:11px;font-weight:600;}'
+      +'.pdf-item-desc{font-size:9px;color:#888;margin-top:2px;}'
+      +'.pdf-item-img{width:100%;height:55px;object-fit:cover;border:1px solid #eee;}'
+      +'.pdf-item-img-ph{width:100%;height:55px;background:#f5f3ef;border:1px solid #eee;display:flex;align-items:center;justify-content:center;font-family:Helvetica,sans-serif;font-size:7px;color:#ccc;}'
+      +'.pdf-item-num{font-size:9px;color:#aaa;font-family:Helvetica,sans-serif;}'
+      +'.pdf-item-val,.pdf-item-qty{font-size:11px;text-align:right;font-family:Helvetica,sans-serif;}'
+      +'.pdf-item-qty{text-align:center;}'
+      +'.pdf-item-amt{font-size:11px;text-align:right;font-weight:600;color:#b8975a;font-family:Helvetica,sans-serif;}'
+      +'.pdf-totals{display:flex;justify-content:flex-end;margin-top:14px;}'
+      +'.pdf-totals-box{width:240px;}'
+      +'.pdf-t-row{display:flex;justify-content:space-between;margin-bottom:5px;font-family:Helvetica,sans-serif;font-size:10px;color:#888;}'
+      +'.pdf-grand{display:flex;justify-content:space-between;align-items:center;background:#1a1a1a;padding:10px 12px;margin-top:3px;}'
+      +'.pdf-grand-lbl{font-family:Helvetica,sans-serif;font-size:7px;letter-spacing:0.08em;color:#d4aa6e;}'
+      +'.pdf-grand-val{font-family:Helvetica,sans-serif;font-size:14px;font-weight:700;color:#d4aa6e;}'
+      +'.pdf-footnote{font-family:Helvetica,sans-serif;font-size:7px;color:#ccc;margin-top:4px;text-align:right;}'
+      +'.pdf-pay-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;}'
+      +'.pdf-pay-card{border:1px solid #e8e4de;background:#f5f3ef;padding:9px;}'
+      +'.pdf-pay-pct{font-size:18px;font-weight:700;color:#b8975a;margin-bottom:1px;}'
+      +'.pdf-pay-title{font-size:10px;font-weight:600;margin-bottom:4px;}'
+      +'.pdf-pay-note{font-size:9px;color:#888;line-height:1.5;}'
+      +'.pdf-pay-amt{font-family:Helvetica,sans-serif;font-size:9px;color:#888;margin-top:6px;padding-top:5px;border-top:1px solid #e8e4de;}'
+      +'.pdf-terms-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px;}'
+      +'.pdf-term-card{border:1px solid #e8e4de;background:#f5f3ef;padding:9px;}'
+      +'.pdf-term-num{font-family:Helvetica,sans-serif;font-size:7px;color:#aaa;margin-bottom:3px;}'
+      +'.pdf-term-title{font-size:10px;font-weight:600;margin-bottom:2px;}'
+      +'.pdf-term-body{font-size:9px;color:#888;line-height:1.6;}'
+      +'.pdf-validity{padding:9px 12px;border:1px solid #e8e4de;border-left:3px solid #b8975a;background:#f5f3ef;font-size:9px;color:#888;line-height:1.7;}'
+      +'.pdf-sig-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:10px;}'
+      +'.pdf-sig-lbl{font-family:Helvetica,sans-serif;font-size:7px;letter-spacing:0.14em;color:#aaa;display:block;margin-bottom:8px;}'
+      +'.pdf-sig-name{font-size:11px;font-weight:600;margin-bottom:2px;}'
+      +'.pdf-sig-line{height:1px;background:#ccc;margin:20px 0 5px;}'
+      +'.pdf-sig-date{font-family:Helvetica,sans-serif;font-size:8px;color:#ccc;}'
+      +'.pdf-footer{margin-top:20px;padding-top:10px;border-top:1px solid #e8e4de;display:flex;justify-content:space-between;font-family:Helvetica,sans-serif;font-size:7px;color:#ccc;}'
+      +'</style></head><body>'+pageHTML+'</body></html>';
+
+    var blob=new Blob([full],{type:'text/html'});
+    var url=URL.createObjectURL(blob);
+    // Open in new tab — user can then Share → Print → Save PDF
+    window.open(url,'_blank');
+    showToast('Tap Share → Print → Save PDF');
+  } else {
+    // Fallback: open print
+    window.print();
+  }
+}
+
+/* ════ INIT ════ */
+loadDB();
+renderDash();
+var _bform=document.getElementById('screen_builder');
+_bform.addEventListener('input',autosave);
+_bform.addEventListener('change',autosave);
+</script>
+</body>
+</html>
